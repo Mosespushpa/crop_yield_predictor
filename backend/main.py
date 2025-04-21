@@ -1,53 +1,72 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import pandas as pd
 import pickle
+import os
+import traceback
 
+# Initialize FastAPI app
 app = FastAPI()
 
-from fastapi.middleware.cors import CORSMiddleware
-
+# Enable CORS (React default localhost)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Or ["*"] for all origins (dev only)
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Model path (portable)
+MODEL_PATH = "D:/Gruop_project/Major_Project/crop_yield_predictor/backend/model/best_model/model.pkl"
 
-# Load the trained model
-with open("D:/Gruop_project/Major_Project/crop_yield_predictor/backend/model/best_model/model.pkl", "rb") as f:
-    model = pickle.load(f)
-    
+# Load trained model
+try:
+    with open(MODEL_PATH, "rb") as f:
+        model = pickle.load(f)
+        print("✅ Model loaded successfully.")
+except Exception as e:
+    raise RuntimeError(f"❌ Failed to load model: {e}")
+
+# Input validation schema
+class YieldRequest(BaseModel):
+    crop_type: str
+    season: str
+    state: str
+    rainfall: float
+    avg_temp: float
+    pesticide_usage: float
+    fertilizer: float
+    area: float
 
 @app.get("/")
 def home():
-    return {"message": "FastAPI is running. Use /predict via POST."}
+    return {"message": "🌾 FastAPI is live. Use POST /predict to get yield."}
 
 @app.post("/predict")
-async def predict(request: Request):
+def predict(data: YieldRequest):
     try:
-        data = await request.json()
-        print("Incoming data:", data)
-
+        # Prepare input dict matching training feature names
         input_data = {
-            'Crop_Type': data['crop_type'],
-            'Season': data['season'],
-            'State': data['state'],
-            'Rainfall': float(data['rainfall']),
-            'Fertilizer': float(data['fertilizer']),
-            'Pesticide_Usage': float(data['pesticide_usage']),
-            'Avg_Temperature': float(data['avg_temp']),
-            'Area': float(data['area']),
+            "Crop_Type": data.crop_type,
+            "Season": data.season,
+            "State": data.state,
+            "Rainfall": data.rainfall,
+            "Fertilizer": data.fertilizer,
+            "Pesticide_Usage": data.pesticide_usage,
+            "Avg_Temperature": data.avg_temp,
+            "Area": data.area,
         }
 
         df_input = pd.DataFrame([input_data])
-        print("Processed DataFrame:", df_input)
+        print("📥 Input DataFrame:\n", df_input)
 
         prediction = model.predict(df_input)[0]
+        print("📈 Predicted Yield:", prediction)
 
         return {"predicted_yield": round(prediction, 2)}
 
     except Exception as e:
-        return {"error": str(e)}
+        print("❌ Prediction error:", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")

@@ -16,22 +16,35 @@ const YieldForm = () => {
   const [predictedYield, setPredictedYield] = useState(null);
 
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/predict', formData);
+      console.log("🟢 Button clicked");
+      console.log("✅ Submitting:", formData);
 
-      setPredictedYield(res.data.predicted_yield);
+      const res = await axios.post('http://localhost:8000/predict', formData);
+      console.log("✅ Backend response:", res.data);
+
+      if ('predicted_yield' in res.data) {
+        const yieldValue = parseFloat(res.data.predicted_yield);
+        setPredictedYield(yieldValue);
+        console.log("🧠 Predicted yield set to:", yieldValue);
+        alert(`Predicted Yield: ${yieldValue.toFixed(2)} hg/ha`);
+      } else {
+        console.warn("⚠️ Response missing 'predicted_yield':", res.data);
+        alert("Prediction failed. Response format unexpected.");
+      }
     } catch (err) {
+      console.error("❌ Backend error:", err);
       alert("Prediction failed: " + err.message);
     }
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 500, margin: '0 auto' }}>
+    <div style={{ padding: 20, maxWidth: 500, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
       <h2>Crop Yield Predictor</h2>
       <form onSubmit={handleSubmit}>
         <label>State:</label>
@@ -40,7 +53,6 @@ const YieldForm = () => {
           <option value="Karnataka">Karnataka</option>
           <option value="Punjab">Punjab</option>
           <option value="Maharashtra">Maharashtra</option>
-          {/* Add more as needed */}
         </select>
 
         <label>Season:</label>
@@ -69,11 +81,16 @@ const YieldForm = () => {
         <label>Area (ha):</label>
         <input type="number" name="area" value={formData.area} onChange={handleChange} required />
 
-        <button type="submit" style={{ marginTop: 10 }}>Predict Yield</button>
+        <button
+          type="submit"
+          style={{ marginTop: 10, padding: '6px 12px' }}
+        >
+          Predict Yield
+        </button>
       </form>
 
-      {predictedYield && (
-        <div style={{ marginTop: 20 }}>
+      {predictedYield !== null && (
+        <div style={{ marginTop: 20, padding: 10, background: '#f0f0f0' }}>
           <h3>Predicted Yield: {predictedYield.toFixed(2)} hg/ha</h3>
         </div>
       )}
