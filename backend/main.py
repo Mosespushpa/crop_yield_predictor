@@ -49,14 +49,14 @@ def predict(data: YieldRequest):
     try:
         # Prepare input dict matching training feature names
         input_data = {
-            "Crop_Type": data.crop_type,
-            "Season": data.season,
-            "State": data.state,
-            "Rainfall": data.rainfall,
-            "Fertilizer": data.fertilizer,
-            "Pesticide_Usage": data.pesticide_usage,
-            "Avg_Temperature": data.avg_temp,
-            "Area": data.area,
+            "state": data.state,
+            "season": data.season,
+            "crop_type": data.crop_type,
+            "rainfall": data.rainfall,
+            "avg_temperature": data.avg_temp,
+            "pesticide_usage": data.pesticide_usage,
+            "fertilizer": data.fertilizer,
+            "area": data.area,
         }
 
         df_input = pd.DataFrame([input_data])
