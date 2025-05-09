@@ -4,5 +4,4 @@ fastapi
 uvicorn
 pandas
 scikit-learn
-xgboost
 python-multipart

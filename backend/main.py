@@ -65,8 +65,33 @@ def predict(data: YieldRequest):
         prediction = model.predict(df_input)[0]
         print("📈 Predicted Yield:", prediction)
 
-        return {"predicted_yield": round(prediction, 2)}
+        recs = get_recommendations(input_data, prediction)
+        return {"predicted_yield": float(round(prediction, 2)),  "recommendations": recs}
 
     except Exception as e:
         print("❌ Prediction error:", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+def get_recommendations(data: dict, predicted_yield: float):
+    crop = data["crop_type"].lower()
+    area = data["area"]
+
+    recommendations = []
+
+    # Example logic — you can replace this with real rules or ML
+    if crop == "rice":
+        recommendations.append(f"💡 Use 60 kg/ha of Urea and 30 kg/ha of DAP for optimal rice growth.")
+        recommendations.append(f"🛡️ Apply 2.5 L/ha of Monocrotophos pesticide during tillering stage.")
+    elif crop == "wheat":
+        recommendations.append(f"💡 Use 50 kg/ha of NPK (12:32:16) at sowing.")
+        recommendations.append(f"🛡️ Apply 2 sprays of Chlorpyrifos at 10-day intervals.")
+    else:
+        recommendations.append(f"📌 Follow local extension guidelines for {crop} pesticide/fertilizer usage.")
+
+    # Add context-aware message
+    if predicted_yield < 3000:
+        recommendations.append("📉 Yield is low — consider adjusting fertilizer dosage or irrigation.")
+    elif predicted_yield > 6000:
+        recommendations.append("🌾 Great yield expected! Maintain proper weed control and nutrient management.")
+
+    return recommendations

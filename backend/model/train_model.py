@@ -85,6 +85,7 @@ evaluate(rf_search, "Random Forest")
 
 # ---- 9. Save Best Model ----
 best_model = xgb_search if xgb_search.best_score_ > rf_search.best_score_ else rf_search
+
 model_path = os.path.join("best_model","model.pkl")
 
 # Ensure directory exists
@@ -92,5 +93,4 @@ os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
 with open(model_path, "wb") as f:
     pickle.dump(best_model, f)
-
 
