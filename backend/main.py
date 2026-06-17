@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 # Model path (portable)
-MODEL_PATH = "D:/Gruop_project/Major_Project/crop_yield_predictor/backend/model/best_model/model.pkl"
+MODEL_PATH = "model/best_model/model.pkl"
 
 # Load trained model
 try:
