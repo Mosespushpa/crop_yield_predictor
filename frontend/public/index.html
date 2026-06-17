@@ -1,68 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <style>
-      body {
-        font-family: sans-serif;
-      }
-    
-      label {
-        display: block;
-        margin-top: 10px;
-      }
-    
-      input, select {
-        width: 100%;
-        padding: 6px;
-        margin-top: 4px;
-      }
-    
-      button {
-        padding: 8px 16px;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-    </style>
-    
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<head>
+  <meta charset="UTF-8">
+  <title>Crop Yield Predictor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 40px 10px;
+      background: #f5f7fa;
+    }
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    input, select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background-color: #1e90ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #999;
+    }
+
+    .result {
+      margin-top: 25px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .box {
+      background: #f0f4ff;
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>🌾 Crop Yield Predictor</h2>
+
+  <form id="form">
+    <div class="grid">
+
+      <select name="state" required>
+        <option value="">State</option>
+        <option>Tamil Nadu</option>
+        <option>Karnataka</option>
+        <option>Kerala</option>
+        <option>Punjab</option>
+      </select>
+
+      <select name="season" required>
+        <option value="">Season</option>
+        <option>Kharif</option>
+        <option>Rabi</option>
+        <option>Summer</option>
+      </select>
+
+      <select name="crop_type" required>
+        <option value="">Crop</option>
+        <option>Rice</option>
+        <option>Wheat</option>
+        <option>Maize</option>
+      </select>
+
+      <input type="number" name="rainfall" placeholder="Rainfall" required>
+      <input type="number" name="avg_temp" placeholder="Temperature" required>
+      <input type="number" name="pesticide_usage" placeholder="Pesticide" required>
+      <input type="number" name="fertilizer" placeholder="Fertilizer" required>
+      <input type="number" name="area" placeholder="Area" required>
+
+    </div>
+
+    <button type="submit" id="submitBtn">Predict</button>
+  </form>
+
+  <div class="result" id="result" style="display:none;">
+    <div class="box">
+      <h3>📊 Prediction</h3>
+      <p id="yield"></p>
+    </div>
+
+    <div class="box">
+      <h3>🌱 Recommendations</h3>
+      <ul id="recommendations"></ul>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const form = document.getElementById("form");
+  const btn = document.getElementById("submitBtn");
+  const resultDiv = document.getElementById("result");
+  const yieldText = document.getElementById("yield");
+  const recList = document.getElementById("recommendations");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    btn.disabled = true;
+    btn.textContent = "Predicting...";
+
+    const formData = Object.fromEntries(new FormData(form));
+
+    try {
+      const res = await fetch("https://crop-yield-predictor-f11z.onrender.com", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+
+      if (data.predicted_yield !== undefined) {
+        yieldText.innerText = data.predicted_yield.toFixed(2) + " kg/ha";
+
+        recList.innerHTML = "";
+        (data.recommendations || []).forEach(r => {
+          const li = document.createElement("li");
+          li.innerText = r;
+          recList.appendChild(li);
+        });
+
+        resultDiv.style.display = "grid";
+      } else {
+        alert("Invalid response from server");
+      }
+
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Predict";
+  });
+</script>
+
+</body>
 </html>
