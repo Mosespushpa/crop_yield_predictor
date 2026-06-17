@@ -29,7 +29,7 @@ const YieldForm = () => {
     setPredictedYield(null);
 
     try {
-      const res = await axios.post('http://localhost:8000/predict', formData);
+      const res = await axios.post('https://crop-yield-predictor-f11z.onrender.com', formData);
       if ('predicted_yield' in res.data) {
         setPredictedYield(res.data.predicted_yield);
         setRecommendations(res.data.recommendations || []);
